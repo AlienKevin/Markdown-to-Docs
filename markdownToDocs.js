@@ -77,7 +77,7 @@ function replaceLink(body){
   const capture = "(.+?)";
   const regex = new RegExp("\\[" + capture + "\\]\\(" + capture + "\\)", "g");
   const replacer = function (match, regex) {
-    return match[1];
+    return [1, match[1].length + 1];
   }
   const attributes = function (match) {
     const resultObject = {};

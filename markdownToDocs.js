@@ -91,7 +91,11 @@ function replaceHeaders(body, deliminator, attributes){
   const capture = "(.+?)";
   const regex = new RegExp(deliminator + " " + capture + "\n", "g");
   const replacer = function (match, regex) {
-    return match[1] + "\n";
+//    return match[1] + "\n";
+    Logger.log("match[0]: " + match[0]);
+    Logger.log("deliminator.length: " + deliminator.length);
+    Logger.log("match[0].length: " + match[0].length);
+    return [deliminator.length + 1, match[0].length];
   }
   replaceText(body, regex, replacer, attributes, false, resizeImage);
 }
@@ -107,7 +111,11 @@ function replaceDeliminators(body, deliminator, attributes, multiline, replacer)
   const regex = new RegExp(deliminator + capture + deliminator, "g");
   if (replacer === undefined) {
     replacer = function (match, regex) {
-      return match[1];
+      const deliminatorLength = deliminator.replace(/\\\\/g, "\\").replace(/\\/g, "").length;
+      Logger.log("deliminator.length: " + deliminatorLength);
+      Logger.log("match[0].length: " + match[0].length);
+      Logger.log("match[0]: " + match[0]);
+      return [deliminatorLength, match[0].length - deliminatorLength];
     }
     isImage = false;
   }
@@ -128,7 +136,7 @@ function replaceText(body, regex, replacer, attributes, isImage, resizeImage) {
   }
   var doc = DocumentApp.getActiveDocument();
   var content = body.getText();
-  const text = body.editAsText();
+  var text = body.editAsText();
   var match = "";
   while (true) {
     content = body.getText();
@@ -139,9 +147,35 @@ function replaceText(body, regex, replacer, attributes, isImage, resizeImage) {
     }
     var start = match.index;
     var end = regex.lastIndex - 1;
-    text.deleteText(start, end);
-    var newContent = replacer(match, regex);
-    Logger.log("newContent: " + newContent);
+    Logger.log("start: " + start);
+    Logger.log("end: " + end);
+//    text.deleteText(start, end);
+    var replaced = replacer(match, regex);
+    Logger.log("replaced start: " + replaced[0]);
+    Logger.log("replaced end: " + replaced[1]);
+    Logger.log("start: " + start);
+    Logger.log("end: " + end);
+    var replaceStart = start + replaced[0];
+    var replaceEnd = start + replaced[1];
+    Logger.log("replaceStart: " + replaceStart);
+    Logger.log("replaceEnd: " + replaceEnd);
+    Logger.log("start: " + start);
+    Logger.log("end: " + end);
+    
+    text.deleteText(start, replaceStart - 1);
+    Logger.log("text: " + body.getText());
+    
+    var deleted = replaceStart - start;
+    Logger.log("deleted: " + deleted);
+    
+    var secondDeleteStart = replaceEnd - deleted;
+    var secondDeleteEnd = end - deleted;
+    Logger.log("secondDeleteStart: " + secondDeleteStart);
+    Logger.log("secondDeleteEnd: " + secondDeleteEnd);
+    if (secondDeleteEnd >= secondDeleteStart) {
+      text.deleteText(secondDeleteStart, secondDeleteEnd);
+    }
+    Logger.log("text: " + body.getText());
     
     Logger.log("start: " + start);
     Logger.log("end: " + end);
@@ -149,7 +183,7 @@ function replaceText(body, regex, replacer, attributes, isImage, resizeImage) {
       var imageDoc = doc.newPosition(body.editAsText(), start).insertInlineImage(newContent);
       resizeImage(imageDoc);
     } else {
-      text.insertText(start, newContent);
+//      text.insertText(start, newContent);
     }
     Logger.log("Successfully inserted text!");
     var newLength = body.getText().length;
@@ -157,14 +191,70 @@ function replaceText(body, regex, replacer, attributes, isImage, resizeImage) {
     var newEnd = end - replacedLength;
     if (attributes !== undefined) {
       if (isFunction(attributes)){ // attributes parameter can be a function (match is passed in as the argument)
-        text.setAttributes(start, newEnd, attributes(match))
+        applyNewAttributes(text, start, newEnd, attributes(match))       
+//      text.setAttributes(start, newEnd, attributes(match))
       } else{ // normal attributes
-        text.setAttributes(start, newEnd, attributes);
+        applyNewAttributes(text, start, newEnd, attributes)
+//      text.setAttributes(start, newEnd, attributes);
       }
     }
     Logger.log("Successfully set attributes!");
     regex.lastIndex -= replacedLength;
   }
+}
+
+function applyNewAttributes(text, start, end, newAttributes) {
+  Logger.log("start: " + start);
+  Logger.log("end: " + end);
+//  
+//  const doc = DocumentApp.getActiveDocument();
+//  const body = doc.getBody();
+//  const content = body.getText();
+//  var text = body.editAsText();
+//  
+//  for (var i = start; i <= end; i++) {
+//    Logger.log("index: " + i);
+//    Logger.log("char: " + content[i]);
+//    Logger.log("oldAttributes:");
+//    const oldAttributes = text.getAttributes(i);
+//    printObject(oldAttributes);
+//    const mergedAttributes = assign({}, oldAttributes, newAttributes);
+//    Logger.log("mergedAttributes:");
+//    printObject(mergedAttributes);
+//    text.setAttributes(i, i, mergedAttributes)
+//  }
+  
+//  for (var i = start; i <= end; i++) {
+//    Logger.log("index: " + i);
+//    const oldAttributes = text.getAttributes(i);
+//    printObject(oldAttributes);
+//  }
+  
+  printObject(newAttributes);
+  switch (Object.keys(newAttributes)[0]){
+    case "ITALIC":
+      Logger.log("Setting text as italic...");
+      text.setItalic(start, end, true);    
+      break;
+    case "BOLD":
+      Logger.log("Setting text as bold...");
+      text.setBold(start, end, true);
+      break;
+    case "STRIKETHROUGH":
+      Logger.log("Setting text as strikethrough...");
+      text.setStrikethrough(start, end, true);
+      break;
+  }
+//  text.setAttributes(start, end, newAttributes);
+}
+
+function printObject(obj) {
+  var str = "{";
+  Object.keys(obj).forEach(function(key) {
+    str += key + ": " + obj[key] + ",\n";
+  });
+  str += "}";
+  Logger.log(str);
 }
 
 function resizeImage(image) {
@@ -174,4 +264,26 @@ function resizeImage(image) {
 
 function isFunction(functionToCheck) {
  return functionToCheck && {}.toString.call(functionToCheck) === '[object Function]';
+}
+
+function assign(target) {
+  if (target === null || target === undefined) {
+    throw new TypeError('Cannot convert undefined or null to object');
+  }
+  
+  var to = Object(target);
+  
+  for (var index = 1; index < arguments.length; index++) {
+    var nextSource = arguments[index];
+    
+    if (nextSource !== null && nextSource !== undefined) { 
+      for (var nextKey in nextSource) {
+        // Avoid bugs when hasOwnProperty is shadowed
+        if (Object.prototype.hasOwnProperty.call(nextSource, nextKey)) {
+          to[nextKey] = nextSource[nextKey];
+        }
+      }
+    }
+  }
+  return to;
 }

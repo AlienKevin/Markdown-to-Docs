@@ -88,9 +88,9 @@ function replaceLink(body){
 }
 
 function replaceHeaders(body, deliminator, attributes){
-  const capture = "(.+?)";
-  const regex = new RegExp(deliminator + " " + capture + "\n", "g");
-  const replacer = function (match, regex) {
+  var capture = "(.+?)";
+  var regex = new RegExp(deliminator + " " + capture + "\n", "g");
+  var replacer = function (match, regex) {
 //    return match[1] + "\n";
     Logger.log("match[0]: " + match[0]);
     Logger.log("deliminator.length: " + deliminator.length);
@@ -191,61 +191,14 @@ function replaceText(body, regex, replacer, attributes, isImage, resizeImage) {
     var newEnd = end - replacedLength;
     if (attributes !== undefined) {
       if (isFunction(attributes)){ // attributes parameter can be a function (match is passed in as the argument)
-        applyNewAttributes(text, start, newEnd, attributes(match))       
-//      text.setAttributes(start, newEnd, attributes(match))
+        text.setAttributes(start, newEnd, attributes(match))
       } else{ // normal attributes
-        applyNewAttributes(text, start, newEnd, attributes)
-//      text.setAttributes(start, newEnd, attributes);
+        text.setAttributes(start, newEnd, attributes);
       }
     }
     Logger.log("Successfully set attributes!");
     regex.lastIndex -= replacedLength;
   }
-}
-
-function applyNewAttributes(text, start, end, newAttributes) {
-  Logger.log("start: " + start);
-  Logger.log("end: " + end);
-//  
-//  const doc = DocumentApp.getActiveDocument();
-//  const body = doc.getBody();
-//  const content = body.getText();
-//  var text = body.editAsText();
-//  
-//  for (var i = start; i <= end; i++) {
-//    Logger.log("index: " + i);
-//    Logger.log("char: " + content[i]);
-//    Logger.log("oldAttributes:");
-//    const oldAttributes = text.getAttributes(i);
-//    printObject(oldAttributes);
-//    const mergedAttributes = assign({}, oldAttributes, newAttributes);
-//    Logger.log("mergedAttributes:");
-//    printObject(mergedAttributes);
-//    text.setAttributes(i, i, mergedAttributes)
-//  }
-  
-//  for (var i = start; i <= end; i++) {
-//    Logger.log("index: " + i);
-//    const oldAttributes = text.getAttributes(i);
-//    printObject(oldAttributes);
-//  }
-  
-  printObject(newAttributes);
-  switch (Object.keys(newAttributes)[0]){
-    case "ITALIC":
-      Logger.log("Setting text as italic...");
-      text.setItalic(start, end, true);    
-      break;
-    case "BOLD":
-      Logger.log("Setting text as bold...");
-      text.setBold(start, end, true);
-      break;
-    case "STRIKETHROUGH":
-      Logger.log("Setting text as strikethrough...");
-      text.setStrikethrough(start, end, true);
-      break;
-  }
-//  text.setAttributes(start, end, newAttributes);
 }
 
 function printObject(obj) {

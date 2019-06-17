@@ -29,10 +29,12 @@ function markdownToDocs() {
   const boldStyle = {};
   boldStyle[DocumentApp.Attribute.BOLD] = true;
   replaceDeliminators(body, "\\*\\*", boldStyle, false);
+  replaceDeliminators(body, "__", boldStyle, false);
   
   const italicStyle = {};
   italicStyle[DocumentApp.Attribute.ITALIC] = true;
   replaceDeliminators(body, "\\*", italicStyle, false);
+  replaceDeliminators(body, "_", italicStyle, false);
   
   const strikethroughStyle = {}
   strikethroughStyle[DocumentApp.Attribute.STRIKETHROUGH] = true;

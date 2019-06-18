@@ -71,7 +71,7 @@ function markdownToDocs() {
   
   // links
   const linkStyle = {};
-  replaceLink(body);
+  replaceLinks(body);
   autoconvertLinks(body);
 }
 
@@ -89,7 +89,7 @@ function autoconvertLinks(body){
   replaceText(body, regex, replacer, attributes, false, resizeImage);
 }
 
-function replaceLink(body){
+function replaceLinks(body){
   const capture = "(.+?)";
   const regex = new RegExp("\\[" + capture + "\\]\\(" + capture + "\\)", "g");
   const replacer = function (match, regex) {

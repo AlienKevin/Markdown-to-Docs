@@ -72,7 +72,21 @@ function markdownToDocs() {
   // links
   const linkStyle = {};
   replaceLink(body);
-  
+  autoconvertLinks(body);
+}
+
+function autoconvertLinks(body){
+  const regex = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/g;
+  const replacer = function (match, regex) {
+    Logger.log(match[0].length)
+    return [0, match[0].length];
+  }
+  const attributes = function (match) {
+    const resultObject = {};
+    resultObject[DocumentApp.Attribute.LINK_URL] = match[0];
+    return resultObject;
+  }
+  replaceText(body, regex, replacer, attributes, false, resizeImage);
 }
 
 function replaceLink(body){
@@ -164,7 +178,9 @@ function replaceText(body, regex, replacer, attributes, isImage, resizeImage) {
     Logger.log("start: " + start);
     Logger.log("end: " + end);
     
-    text.deleteText(start, replaceStart - 1);
+    if (replaceStart - 1 >= start) {
+      text.deleteText(start, replaceStart - 1);
+    }
     Logger.log("text: " + body.getText());
     
     var deleted = replaceStart - start;
